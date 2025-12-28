@@ -1,2 +1,2 @@
 #!/bin/bash
-whois $1 | awk -F: '/Registrant|Admin|Tech/ {gsub(/^ /,"",$2); name=$1; val=$2; if(name~/Street/) val=val" "; if(name~/Phone$/) {print name","val; print name" Ext:,"} else if(name~/Fax$/) {print name","val; print name" Ext:,"} else print name","val}' > $1.csv
+whois "$1" | awk -F': ' '/Name:|Organization:|Street:|City:|State\/Province:|Postal Code:|Country:|Phone:|Phone Ext:|Fax:|Fax Ext:|Email:/ {gsub(/^[^:]+: /,""); print $1","$2}' > "$1.csv"
