@@ -1,9 +1,13 @@
 #!/bin/bash
 
-# Remove {xor} prefix
-hash="${1#\{xor\}}"
+# Verify RGUMENT
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 {xor}base64_string"
+    exit 1
+fi
 
-# Decode Base64 and XOR each byte with 0x23
-echo "$hash" | base64 -d | while IFS= read -r -n1 c; do
-    printf "\\$(printf '%03o' $(( $(printf '%d' "'$c") ^ 0x23 )))"
-done
+#  Extract code
+encoded=${1#"{xor}"}
+
+# Decode base64
+echo "$encoded" | base64 -d | perl -pe 's/(.)/chr(ord($1) ^ 0x5F)/ge'
