@@ -3,8 +3,7 @@
 # Remove {xor} prefix
 hash="${1#\{xor\}}"
 
-# Base64 decode and XOR with 0x5F
-echo "$hash" | base64 -d | while IFS= read -r -n1 char; do
-    printf "\\$(printf '%03o' "$(( $(printf '%d' "'$char") ^ 0x5F ))")"
+# Decode Base64 and XOR each byte with 0x23
+echo "$hash" | base64 -d | while IFS= read -r -n1 c; do
+    printf "\\$(printf '%03o' $(( $(printf '%d' "'$c") ^ 0x23 )))"
 done
-echo
