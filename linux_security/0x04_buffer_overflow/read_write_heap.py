@@ -1,62 +1,59 @@
-#!/usr/bin/python3
-"""
-Finds and replaces a string in the heap of a running process.
-"""
-
+#!/usr/bin/env python3
 import sys
+import re
 
+def error(msg):
+    print(msg)
+    sys.exit(1)
 
-def main():
-    """ Main function to read and write to process memory """
-    if len(sys.argv) != 4:
-        print("Usage: read_write_heap.py pid search_string replace_string")
-        sys.exit(1)
-
-    pid = sys.argv[1]
-    search_str = sys.argv[2]
-    replace_str = sys.argv[3]
-
-    if search_str == "":
-        return
-
+def get_heap_range(pid):
     try:
-        # Heap aralığını bulmak için maps dosyasını oku
-        with open("/proc/{}/maps".format(pid), "r") as f:
+        with open(f"/proc/{pid}/maps", "r") as f:
             for line in f:
                 if "[heap]" in line:
-                    addr_range = line.split()[0].split('-')
-                    start_addr = int(addr_range[0], 16)
-                    end_addr = int(addr_range[1], 16)
-                    break
-            else:
-                sys.exit(1)
+                    parts = line.split()
+                    addr = parts[0]
+                    start, end = addr.split("-")
+                    return int(start, 16), int(end, 16)
+    except Exception:
+        pass
+    return None, None
 
-        # Mem dosyasını binary modda aç
-        with open("/proc/{}/mem".format(pid), "rb+") as mem:
-            mem.seek(start_addr)
-            heap_data = mem.read(end_addr - start_addr)
+def main():
+    if len(sys.argv) != 4:
+        error("Usage: read_write_heap.py pid search_string replace_string")
 
-            try:
-                # Stringi axtar
-                offset = heap_data.index(search_str.encode('ascii'))
-            except ValueError:
-                sys.exit(1)
+    pid = sys.argv[1]
+    search = sys.argv[2].encode()
+    replace = sys.argv[3].encode()
 
-            # Testin beklediği tam format (Başında boşluk varsa ekle)
-            print("[*] Found '{}' at {}".format(search_str,
-                                                hex(start_addr + offset)))
+    if len(replace) != len(search):
+        error("Error: replace string must be same length as search string")
 
-            # Yazma işlemi
-            mem.seek(start_addr + offset)
-            mem.write(replace_str.encode('ascii'))
+    start, end = get_heap_range(pid)
+    if start is None:
+        error("Error: cannot find heap")
 
-            print("[*] Replaced with '{}'".format(replace_str))
-            # Testin beklediği kritik başarı mesajı
+    try:
+        with open(f"/proc/{pid}/mem", "rb+") as mem:
+            mem.seek(start)
+            heap = mem.read(end - start)
+
+            index = heap.find(search)
+            if index == -1:
+                error("Error: string not found in heap")
+
+            real_addr = start + index
+
+            mem.seek(real_addr)
+            mem.write(replace)
+
             print("SUCCESS!")
 
-    except Exception:
-        sys.exit(1)
-
+    except PermissionError:
+        error("Error: permission denied (try sudo)")
+    except Exception as e:
+        error(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
