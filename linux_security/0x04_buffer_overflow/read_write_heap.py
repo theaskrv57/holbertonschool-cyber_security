@@ -1,32 +1,4 @@
 #!/usr/bin/python3
-"""
-Advanced Process Memory Editor - Heap String Replacement Tool
-
-A sophisticated utility for safely finding and replacing strings
-in a process's heap memory with comprehensive error handling,
-validation, and safety checks.
-
-Features:
-- Multi-occurrence replacement
-- ASCII/Unicode support (configurable)
-- Heap boundary protection
-- Permission escalation detection
-- Progress reporting
-- Dry-run mode
-- Backup/restore capability
-- Comprehensive logging
-
-Usage:
-    sudo ./advanced_heap_replace.py [OPTIONS] pid search_string replace_string
-
-Options:
-    --unicode       Enable Unicode string handling
-    --dry-run       Simulate without making changes
-    --backup FILE   Create memory backup file
-    --verbose       Show detailed operation info
-    --all           Replace all occurrences (default: first only)
-"""
-
 import sys
 import os
 import re
